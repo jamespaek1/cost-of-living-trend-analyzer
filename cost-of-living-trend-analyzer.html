@@ -169,6 +169,28 @@
   .col-pt-ol{fill:var(--surface);stroke:var(--amber);stroke-width:2}
   .col-outlook-label{fill:var(--amber);font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase}
 
+  /* toolkit: sliders, results, exports */
+  .col-sliders{display:flex;flex-direction:column;gap:11px;margin-top:12px}
+  .col-srow{display:grid;grid-template-columns:190px 1fr 56px 84px;gap:12px;align-items:center}
+  .col-srow-name{font-size:13px;font-weight:500}
+  .col-srow .col-w{font-family:var(--mono);font-size:12.5px;font-weight:700;text-align:right}
+  .col-srow .col-contrib{font-family:var(--mono);font-size:11px;color:var(--ink-faint);text-align:right}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:2px;background:var(--hairline-strong);outline:none;cursor:pointer}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:16px;height:16px;border-radius:50%;background:var(--ink);border:2px solid var(--paper);box-shadow:0 0 0 1px var(--hairline-strong)}
+  input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--ink);border:2px solid var(--paper)}
+  input[type=range]:focus-visible{outline:2px solid var(--ember);outline-offset:3px}
+  .col-result{font-family:var(--display);font-size:15px;margin-top:14px;padding-top:12px;border-top:1px solid var(--hairline);line-height:1.6}
+  .col-result b{font-family:var(--mono)}
+  .col-bigrate{font-family:var(--mono);font-weight:700;font-size:30px;letter-spacing:-.02em;margin-right:6px;vertical-align:-2px}
+  .col-scenario{display:flex;flex-direction:column;gap:5px;margin-top:14px}
+  .col-sc-scale{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;color:var(--ink-faint)}
+  .col-exports{display:flex;gap:10px;flex-wrap:wrap}
+  @media (max-width:640px){
+    .col-srow{grid-template-columns:104px 1fr 44px;gap:8px}
+    .col-srow .col-contrib{display:none}
+    .col-srow-name{font-size:12px}
+  }
+
   @media (max-width:760px){
     .col-hero-grid{grid-template-columns:1fr;gap:26px}
     .col-row{grid-template-columns:118px 1fr auto;gap:9px}
@@ -193,6 +215,7 @@
     <div class="col-asof-stack">
       <div class="col-asof"><span class="col-live" aria-hidden="true"></span><span id="asOf">as of —</span></div>
       <div class="col-nextcpi" id="nextCpi"></div>
+      <div class="col-nextcpi" id="liveTicker"></div>
     </div>
   </div>
 </header>
@@ -218,9 +241,11 @@
 
 <nav class="col-wrap col-tabs" role="tablist" aria-label="Views">
   <button class="col-tab" role="tab" id="tab-us" aria-controls="panel-us" aria-selected="true">US · by category</button>
+  <button class="col-tab" role="tab" id="tab-me" aria-controls="panel-me" aria-selected="false">My location · live</button>
   <button class="col-tab" role="tab" id="tab-cities" aria-controls="panel-cities" aria-selected="false">Global · by city</button>
   <button class="col-tab" role="tab" id="tab-countries" aria-controls="panel-countries" aria-selected="false">Global · inflation extremes</button>
   <button class="col-tab" role="tab" id="tab-pp" aria-controls="panel-pp" aria-selected="false">Global · purchasing power</button>
+  <button class="col-tab" role="tab" id="tab-tools" aria-controls="panel-tools" aria-selected="false">Toolkit · models &amp; export</button>
 </nav>
 
 <main class="col-wrap">
@@ -264,7 +289,46 @@
 
     <details class="col-notes">
       <summary>Data notes</summary>
-      <p>Headline, core, energy and shelter figures are the values reported by the U.S. Bureau of Labor Statistics (May 2026 CPI, released June 10 2026); New York's metro rate (5.1%) is also reported. Other category and metro values, and the pre-2026 trend, are approximate placeholders pending live data. The dashed line is a near-term <b>outlook</b> scenario — not a forecast — reflecting the mid-June energy-price reversal. Run <code>fetch_cost_of_living.py</code> to pull live FRED CPI; metros can be wired to BLS regional CPI series.</p>
+      <p>Headline, core, energy and shelter figures are the values reported by the U.S. Bureau of Labor Statistics (May 2026 CPI, released June 10 2026); New York's metro rate (5.1%) is also reported. Other category and metro values, and the pre-2026 trend, are approximate placeholders pending live data. The dashed line is a <b>damped-trend statistical forecast</b> fit in-browser to the plotted series (~80% band) — momentum only; it can't see news like the mid-June energy reversal. Use the Toolkit's energy scenario to weigh that against the model. Run <code>fetch_cost_of_living.py</code> to pull live FRED CPI; metros can be wired to BLS regional CPI series.</p>
+    </details>
+  </section>
+
+  <!-- ===== MY LOCATION ===== -->
+  <section class="col-panel" id="panel-me" role="tabpanel" aria-labelledby="tab-me" hidden>
+    <div class="col-panel-head">
+      <div>
+        <h2 class="col-panel-h">My location — the view from where you live</h2>
+        <p class="col-panel-desc">Pick any of ~200 economies. Data is fetched live from the World Bank the moment you choose, the forecasting model runs on your country's series, and your selection is encoded in the page URL so you can share it.</p>
+      </div>
+      <div class="col-panel-meta" id="meMeta"></div>
+    </div>
+
+    <div class="col-compare" style="margin-top:0;margin-bottom:16px">
+      <div>
+        <label for="meCountry">Country / economy</label>
+        <select id="meCountry"><option value="">Loading list…</option></select>
+      </div>
+      <div>
+        <label for="meCity">City (display label)</label>
+        <input id="meCity" type="text" placeholder="e.g. Atlanta" style="font-family:var(--mono);font-size:13px;padding:8px 10px;border:1px solid var(--hairline-strong);border-radius:7px;background:var(--paper);color:var(--ink);width:160px">
+      </div>
+      <div class="col-compare-out" id="meShare">Choose a country to load a live, personalized view.</div>
+    </div>
+
+    <div class="col-livestatus" id="meStatus"></div>
+    <div class="col-globalrow" id="meStats"></div>
+
+    <div class="col-card col-chart-host">
+      <div class="col-spark-top" style="margin-bottom:6px">
+        <span class="col-spark-cap" id="meChartCap">Inflation history · annual · World Bank</span>
+        <span class="col-spark-cap" id="meChartRange"></span>
+      </div>
+      <svg id="meChart" viewBox="0 0 720 300" aria-label="Inflation history for selected country"></svg>
+    </div>
+
+    <details class="col-notes">
+      <summary>Data notes</summary>
+      <p>Country data is fetched live from the free World Bank Open Data API: annual CPI inflation history, GNI per capita (PPP), and the price-level ratio (how much prices in your country are of US levels at market exchange rates, PPP-based). Resolution is <b>country-level</b> — the city field is a display label, since free city-level price APIs don't exist (Numbeo's is licensed; see README to wire it). World Bank series are annual, so the "latest" year is typically the prior calendar year; the dashed line is the same damped-trend model applied to your country. The page auto-rechecks all live sources every 15 minutes and on tab focus.</p>
     </details>
   </section>
 
@@ -366,6 +430,55 @@
     <details class="col-notes">
       <summary>Data notes</summary>
       <p>Purchasing power = average net monthly wage ÷ cost-of-living index, rebased to New York = 100 — the same idea as Numbeo's Local Purchasing Power Index. Wage figures are approximate net-salary proxies; swap in Numbeo's API or World Bank GNI-per-capita (PPP) for live values. The point isn't the exact rank — it's the reframe: a city can top the cost charts yet stay livable on local wages.</p>
+    </details>
+  </section>
+
+  <!-- ===== TOOLKIT ===== -->
+  <section class="col-panel" id="panel-tools" role="tabpanel" aria-labelledby="tab-tools" hidden>
+    <div class="col-panel-head">
+      <div>
+        <h2 class="col-panel-h">Toolkit — make the average personal</h2>
+        <p class="col-panel-desc">Official CPI describes an average household that doesn't exist. Rebuild it around your own spending, stress-test the energy assumption, and take the data with you.</p>
+      </div>
+      <div class="col-panel-meta">computed in-browser</div>
+    </div>
+
+    <div class="col-card">
+      <div class="col-spark-top" style="margin-bottom:6px">
+        <span class="col-spark-cap">My inflation rate · drag to match your monthly spending mix</span>
+        <span class="col-spark-cap">shares auto-normalize</span>
+      </div>
+      <div class="col-sliders" id="miSliders"></div>
+      <div class="col-result" id="miResult"></div>
+    </div>
+
+    <div class="col-card">
+      <div class="col-spark-top" style="margin-bottom:6px">
+        <span class="col-spark-cap">Scenario · where does headline CPI go if energy cools?</span>
+        <span class="col-spark-cap">CPI energy weight ≈ 7%</span>
+      </div>
+      <div class="col-scenario">
+        <input type="range" id="scEnergy" min="-25" max="40" step="0.5" value="23.5" aria-label="Energy inflation scenario, percent year over year">
+        <div class="col-sc-scale"><span>-25%</span><span>0%</span><span>+40%</span></div>
+        <div class="col-result" id="scResult"></div>
+      </div>
+    </div>
+
+    <div class="col-card">
+      <div class="col-spark-top" style="margin-bottom:10px">
+        <span class="col-spark-cap">Export · download the underlying data (CSV)</span>
+      </div>
+      <div class="col-exports">
+        <button class="col-seg" id="expTrend">US trend</button>
+        <button class="col-seg" id="expCats">US categories</button>
+        <button class="col-seg" id="expCities">Cities</button>
+        <button class="col-seg" id="expCtry">Countries</button>
+      </div>
+    </div>
+
+    <details class="col-notes">
+      <summary>Model notes</summary>
+      <p>Default spending shares approximate BLS CPI relative-importance weights; your personal rate is the share-weighted average of category year-over-year changes — the same arithmetic the CPI uses, with your weights. The scenario is first-order: it moves only the energy term (≈7% weight) and holds everything else fixed, ignoring second-round effects (energy feeding into food, transport, etc.), so treat it as a lower bound on the pass-through. The trend chart's dashed line is a damped-trend (Holt) exponential-smoothing projection fit in-browser to the plotted series, with an ~80% band from in-sample residuals — pure momentum, no knowledge of news. All computation is client-side; no data leaves the page.</p>
     </details>
   </section>
 
@@ -554,14 +667,50 @@ function renderSparkline(){
   }
 }
 
+/* ---------- forecasting: damped-trend (Holt) exponential smoothing ---------- */
+const MO=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+function nextMonths(lab,h){
+  const m=/^(\w{3}) '(\d{2})$/.exec(lab||"");
+  let mi=m?MO.indexOf(m[1]):4, yr=m?+m[2]:26;
+  if(mi<0) mi=4;
+  const out=[];
+  for(let k=0;k<h;k++){ mi++; if(mi>11){mi=0;yr++;} out.push(MO[mi]+" '"+yr); }
+  return out;
+}
+function computeForecast(t,h){
+  const y=t.map(d=>d.v);
+  if(y.length<6) return null;
+  const a=0.55, b=0.35, phi=0.85;      // level, trend, damping
+  let l=y[0], tr=y[1]-y[0];
+  const resid=[];
+  for(let i=1;i<y.length;i++){
+    const f=l+phi*tr;                   // one-step-ahead fit
+    resid.push(y[i]-f);
+    const pl=l;
+    l=a*y[i]+(1-a)*(l+phi*tr);
+    tr=b*(l-pl)+(1-b)*phi*tr;
+  }
+  const sd=Math.sqrt(resid.reduce((s,r)=>s+r*r,0)/resid.length)||0.2;
+  const pts=[]; let cum=0;
+  for(let k=1;k<=h;k++){
+    cum+=Math.pow(phi,k);
+    const v=l+cum*tr, band=1.28*sd*Math.sqrt(k);   // ~80% interval
+    pts.push({v:+v.toFixed(1), lo:+Math.max(0,v-band).toFixed(1), hi:+(v+band).toFixed(1)});
+  }
+  return {points:pts, sd:+sd.toFixed(2)};
+}
+
 /* ---------- US line chart ---------- */
 function renderUsChart(){
-  const t=DATA.us.trend, ol=DATA.us.outlook||[], W=720,H=300;
+  const t=DATA.us.trend, W=720,H=300;
+  const fc=computeForecast(t,3);
+  const fm=nextMonths(t[t.length-1].m,3);
+  const ol=fc ? fc.points.map((p,k)=>({m:fm[k],...p})) : (DATA.us.outlook||[]);
   const m={l:38,r:16,t:18,b:34};
   const iw=W-m.l-m.r, ih=H-m.t-m.b;
   const all=t.concat(ol);
   const n=all.length;
-  const yMax=Math.ceil(Math.max(...all.map(d=>d.v),5));
+  const yMax=Math.ceil(Math.max(...all.map(d=>Math.max(d.v,d.hi||0)),5));
   const x=i=>m.l+i*iw/(n-1);
   const y=v=>m.t+ih-(v/yMax)*ih;
 
@@ -578,23 +727,31 @@ function renderUsChart(){
   // x labels (every 2)
   all.forEach((d,i)=>{ if(i%2===0||i===n-1){
     g+=`<text class="col-axis" x="${x(i)}" y="${H-12}" text-anchor="middle">${d.m}</text>`; }});
+  // forecast confidence band (drawn under the lines)
+  if(ol.length && ol[0].lo!=null){
+    const li=t.length-1, ax=x(li).toFixed(1), ay=y(t[li].v).toFixed(1);
+    const up=ol.map((d,k)=>x(t.length+k).toFixed(1)+" "+y(d.hi).toFixed(1)).join(" L");
+    const dn=ol.slice().reverse().map((d,k)=>x(t.length+ol.length-1-k).toFixed(1)+" "+y(d.lo).toFixed(1)).join(" L");
+    g+=`<path d="M${ax} ${ay} L${up} L${dn} Z" fill="rgba(217,138,43,.13)"></path>`;
+  }
   // solid actual line
   const path=t.map((d,i)=>(i?"L":"M")+x(i).toFixed(1)+" "+y(d.v).toFixed(1)).join(" ");
   g+=`<path class="col-line" d="${path}" id="usLine"></path>`;
-  // dashed outlook (connect last actual -> outlook points)
+  // dashed forecast line (connect last actual -> forecast points)
   if(ol.length){
     const li=t.length-1;
     let op=`M${x(li).toFixed(1)} ${y(t[li].v).toFixed(1)}`;
     ol.forEach((d,k)=>{ op+=` L${x(t.length+k).toFixed(1)} ${y(d.v).toFixed(1)}`; });
     g+=`<path class="col-outlook" d="${op}"></path>`;
-    const olx=x(t.length+ol.length-1);
-    g+=`<text class="col-outlook-label" x="${olx}" y="${y(ol[ol.length-1].v)-9}" text-anchor="end">Outlook · energy easing</text>`;
+    const last=ol[ol.length-1], olx=x(t.length+ol.length-1);
+    const ly=y(last.hi!=null?last.hi:last.v)-9;
+    g+=`<text class="col-outlook-label" x="${olx}" y="${ly}" text-anchor="end">${fc?"Model outlook · damped trend · 80% band":"Outlook · energy easing"}</text>`;
   }
   // actual points
   t.forEach((d,i)=>{
     g+=`<circle class="${d.est?'col-pt-est':'col-pt'}" cx="${x(i).toFixed(1)}" cy="${y(d.v).toFixed(1)}" r="${d.est?3:4}"></circle>`;
   });
-  // outlook points
+  // forecast points
   ol.forEach((d,k)=>{
     g+=`<circle class="col-pt-ol" cx="${x(t.length+k).toFixed(1)}" cy="${y(d.v).toFixed(1)}" r="3.5"></circle>`;
   });
@@ -622,7 +779,9 @@ function renderUsChart(){
     hl.setAttribute("x1",x(idx)); hl.setAttribute("x2",x(idx)); hl.style.opacity=1;
     tip.style.left=(x(idx)/W*r.width)+"px";
     tip.style.top=(y(d.v)/H*r.height)+"px";
-    tip.innerHTML=`${d.m} &nbsp; <b>${d.v.toFixed(1)}%</b>${isOl?' <span style="opacity:.6">outlook</span>':(d.est?' <span style="opacity:.6">est</span>':'')}`;
+    const suffix = isOl ? (d.lo!=null?` <span style="opacity:.6">model · ${d.lo.toFixed(1)}–${d.hi.toFixed(1)}</span>`:' <span style="opacity:.6">outlook</span>')
+                        : (d.est?' <span style="opacity:.6">est</span>':'');
+    tip.innerHTML=`${d.m} &nbsp; <b>${d.v.toFixed(1)}%</b>${suffix}`;
     tip.style.opacity=1;
   });
   svg.addEventListener("mouseleave",()=>{tip.style.opacity=0;hl.style.opacity=0});
@@ -824,6 +983,257 @@ function renderPpScatter(data){
   document.getElementById("ppScatter").innerHTML=g;
 }
 
+/* ---------- my location: personalized live country view ---------- */
+const FALLBACK_COUNTRIES=[
+  ["ARG","Argentina"],["AUS","Australia"],["AUT","Austria"],["BGD","Bangladesh"],["BEL","Belgium"],
+  ["BRA","Brazil"],["CAN","Canada"],["CHL","Chile"],["CHN","China"],["COL","Colombia"],
+  ["CZE","Czechia"],["DNK","Denmark"],["DOM","Dominican Republic"],["EGY","Egypt"],["ETH","Ethiopia"],
+  ["FIN","Finland"],["FRA","France"],["DEU","Germany"],["GHA","Ghana"],["GRC","Greece"],
+  ["HTI","Haiti"],["IND","India"],["IDN","Indonesia"],["IRL","Ireland"],["ISR","Israel"],
+  ["ITA","Italy"],["JAM","Jamaica"],["JPN","Japan"],["KEN","Kenya"],["KOR","Korea, Rep."],
+  ["MYS","Malaysia"],["MEX","Mexico"],["MAR","Morocco"],["NLD","Netherlands"],["NZL","New Zealand"],
+  ["NGA","Nigeria"],["NOR","Norway"],["PAK","Pakistan"],["PER","Peru"],["PHL","Philippines"],
+  ["POL","Poland"],["PRT","Portugal"],["RUS","Russian Federation"],["SAU","Saudi Arabia"],["SGP","Singapore"],
+  ["ZAF","South Africa"],["ESP","Spain"],["SWE","Sweden"],["CHE","Switzerland"],["THA","Thailand"],
+  ["TUR","Turkiye"],["UKR","Ukraine"],["ARE","United Arab Emirates"],["GBR","United Kingdom"],
+  ["USA","United States"],["VEN","Venezuela, RB"],["VNM","Viet Nam"]
+].map(c=>({code:c[0],name:c[1]}));
+
+async function wfetch(url){
+  const ctrl=new AbortController(); const to=setTimeout(()=>ctrl.abort(),8000);
+  try{
+    const r=await fetch(url,{cache:"no-store",signal:ctrl.signal});
+    if(!r.ok) throw new Error("http "+r.status);
+    return await r.json();
+  } finally { clearTimeout(to); }
+}
+
+let meInit=false, meCode="";
+async function initMyLocation(){
+  if(meInit) return; meInit=true;
+  const sel=document.getElementById("meCountry");
+  const fill=list=>{
+    const sorted=list.slice().sort((a,b)=>a.name.localeCompare(b.name));
+    sel.innerHTML='<option value="">Choose a country…</option>'+
+      sorted.map(c=>`<option value="${c.code}">${c.name}</option>`).join("");
+  };
+  fill(FALLBACK_COUNTRIES);
+  document.getElementById("meMeta").textContent=FALLBACK_COUNTRIES.length+" economies · built-in list";
+  try{
+    const json=await wfetch("https://api.worldbank.org/v2/country?format=json&per_page=400");
+    const rows=(Array.isArray(json)&&Array.isArray(json[1]))?json[1]:[];
+    const list=rows.filter(r=>r.region && r.region.value && r.region.value!=="Aggregates")
+                   .map(r=>({code:r.id,name:r.name}));
+    if(list.length>60){
+      const keep=sel.value;
+      fill(list); if(keep) sel.value=keep;
+      document.getElementById("meMeta").textContent=list.length+" economies · World Bank live";
+    }
+  }catch(e){ /* fallback list stays */ }
+  sel.addEventListener("change",()=>{ meCode=sel.value; syncMeHash(); if(meCode) loadCountry(meCode); });
+  document.getElementById("meCity").addEventListener("input",syncMeHash);
+  // restore from permalink (#c=FRA&city=Paris)
+  try{
+    const h=new URLSearchParams(location.hash.slice(1));
+    const c=h.get("c"), city=h.get("city");
+    if(city) document.getElementById("meCity").value=city;
+    if(c){ sel.value=c; if(sel.value===c){ meCode=c; loadCountry(c); } }
+  }catch(e){}
+}
+function syncMeHash(){
+  const city=document.getElementById("meCity").value.trim();
+  const p=new URLSearchParams();
+  if(meCode) p.set("c",meCode);
+  if(city) p.set("city",city);
+  const s=p.toString();
+  try{ history.replaceState(null,"", s?("#"+s):location.pathname); }catch(e){ location.hash=s; }
+  document.getElementById("meShare").innerHTML = meCode
+    ? "Shareable — this page's URL now encodes your selection."
+    : "Choose a country to load a live, personalized view.";
+}
+
+async function loadCountry(code, silent){
+  const st=document.getElementById("meStatus");
+  if(!silent) st.innerHTML=`<span class="col-statusdot" style="background:${rgb(AMBER)}"></span><span>Fetching live World Bank data…</span>`;
+  const base="https://api.worldbank.org/v2/country/"+code+"/indicator/";
+  try{
+    const [histJ,gniJ,plrJ]=await Promise.all([
+      wfetch(base+"FP.CPI.TOTL.ZG?format=json&per_page=70&date=2008:2026"),
+      wfetch(base+"NY.GNP.PCAP.PP.CD?format=json&per_page=5&mrnev=1"),
+      wfetch(base+"PA.NUS.PPPC.RF?format=json&per_page=5&mrnev=1")
+    ]);
+    const raw=(Array.isArray(histJ)&&Array.isArray(histJ[1]))?histJ[1]:[];
+    const hist=raw.filter(r=>r.value!=null)
+                  .map(r=>({m:r.date, v:+(+r.value).toFixed(1)}))
+                  .sort((a,b)=>+a.m-+b.m);
+    if(!hist.length) throw new Error("no series");
+    const name=(raw[0]&&raw[0].country&&raw[0].country.value)||code;
+    const g1=gniJ&&gniJ[1]&&gniJ[1][0], p1=plrJ&&plrJ[1]&&plrJ[1][0];
+    const gni=(g1&&g1.value!=null)?Math.round(g1.value):null;
+    const plr=(p1&&p1.value!=null)?+p1.value:null;
+    renderMyCountry(name,hist,gni,plr);
+    st.innerHTML=`<span class="col-statusdot" style="background:${rgb(TEAL)}"></span><span><b>Live</b> — fetched ${fmtClock(new Date())} from the World Bank. Annual series; auto-rechecks every 15 min and when you return to this tab.</span>`;
+  }catch(e){
+    st.innerHTML=`<span class="col-statusdot" style="background:${rgb(EMBER)}"></span><span><b>Couldn't fetch live data</b> for this selection — check the connection and try again. Country data isn't bundled offline.</span>`;
+  }
+}
+
+function renderMyCountry(name,hist,gni,plr){
+  const city=document.getElementById("meCity").value.trim();
+  const label=(city?city+", ":"")+name;
+  const last=hist[hist.length-1];
+  const fc=computeForecast(hist,2);
+  const cards=[];
+  cards.push(`<div class="col-gstat"><div class="col-gval" style="color:${heatYoy(Math.min(last.v,12))}">${last.v}%</div><div class="col-glab">Inflation, ${last.m} (annual avg)</div></div>`);
+  if(plr!=null) cards.push(`<div class="col-gstat"><div class="col-gval">${Math.round(plr*100)}%</div><div class="col-glab">Price level vs US (PPP basis)</div></div>`);
+  if(gni!=null) cards.push(`<div class="col-gstat"><div class="col-gval">$${gni.toLocaleString()}</div><div class="col-glab">GNI per capita, PPP</div></div>`);
+  if(fc) cards.push(`<div class="col-gstat"><div class="col-gval" style="color:${heatYoy(Math.min(fc.points[0].v,12))}">${fc.points[0].v}%</div><div class="col-glab">Model outlook, ${+last.m+1} (damped trend)</div></div>`);
+  document.getElementById("meStats").innerHTML=cards.join("");
+  document.getElementById("meChartCap").textContent="Inflation history · "+label+" · annual · World Bank";
+  document.getElementById("meChartRange").textContent=hist[0].m+" → "+(fc?(+last.m+2):last.m);
+  drawCountryChart(hist,fc);
+}
+
+function drawCountryChart(hist,fc){
+  const svg=document.getElementById("meChart");
+  const ol=fc?fc.points.map((p,k)=>({m:String(+hist[hist.length-1].m+k+1),...p})):[];
+  const all=hist.concat(ol), n=all.length;
+  const W=720,H=300,m={l:50,r:16,t:16,b:30};
+  const iw=W-m.l-m.r, ih=H-m.t-m.b;
+  let lo=Math.min(...all.map(d=>Math.min(d.v,(d.lo!=null?d.lo:d.v))));
+  let hi=Math.max(...all.map(d=>Math.max(d.v,(d.hi!=null?d.hi:d.v))));
+  lo=Math.min(lo,0);
+  const pad=(hi-lo)*0.08||1; lo-=pad; hi+=pad;
+  const x=i=>m.l+i*iw/Math.max(n-1,1);
+  const y=v=>m.t+(hi-v)/(hi-lo)*ih;
+  let g="";
+  const step=Math.max(1,Math.round((hi-lo)/5));
+  for(let v=Math.ceil(lo/step)*step; v<=hi; v+=step){
+    g+=`<line class="col-gridline" x1="${m.l}" y1="${y(v)}" x2="${W-m.r}" y2="${y(v)}"></line>`;
+    g+=`<text class="col-axis" x="${m.l-8}" y="${y(v)+3}" text-anchor="end">${v}%</text>`;
+  }
+  if(lo<0&&hi>0) g+=`<line x1="${m.l}" y1="${y(0)}" x2="${W-m.r}" y2="${y(0)}" stroke="var(--ink-faint)" stroke-width="1"></line>`;
+  const ev=Math.max(1,Math.ceil(n/8));
+  all.forEach((d,i)=>{ if(i%ev===0||i===n-1)
+    g+=`<text class="col-axis" x="${x(i)}" y="${H-10}" text-anchor="middle">${d.m}</text>`; });
+  if(ol.length&&ol[0].lo!=null){
+    const li=hist.length-1, ax=x(li).toFixed(1), ay=y(hist[li].v).toFixed(1);
+    const up=ol.map((d,k)=>x(hist.length+k).toFixed(1)+" "+y(d.hi).toFixed(1)).join(" L");
+    const dn=ol.slice().reverse().map((d,k)=>x(hist.length+ol.length-1-k).toFixed(1)+" "+y(d.lo).toFixed(1)).join(" L");
+    g+=`<path d="M${ax} ${ay} L${up} L${dn} Z" fill="rgba(217,138,43,.13)"></path>`;
+  }
+  const path=hist.map((d,i)=>(i?"L":"M")+x(i).toFixed(1)+" "+y(d.v).toFixed(1)).join(" ");
+  g+=`<path class="col-line" d="${path}"></path>`;
+  if(ol.length){
+    const li=hist.length-1;
+    let op=`M${x(li).toFixed(1)} ${y(hist[li].v).toFixed(1)}`;
+    ol.forEach((d,k)=>{ op+=` L${x(hist.length+k).toFixed(1)} ${y(d.v).toFixed(1)}`; });
+    g+=`<path class="col-outlook" d="${op}"></path>`;
+  }
+  hist.forEach((d,i)=>{
+    g+=`<circle class="col-pt" cx="${x(i).toFixed(1)}" cy="${y(d.v).toFixed(1)}" r="3"><title>${d.m}: ${d.v}%</title></circle>`;
+  });
+  ol.forEach((d,k)=>{
+    g+=`<circle class="col-pt-ol" cx="${x(hist.length+k).toFixed(1)}" cy="${y(d.v).toFixed(1)}" r="3"><title>${d.m}: ${d.v}% model (${d.lo}–${d.hi})</title></circle>`;
+  });
+  svg.innerHTML=g;
+}
+
+/* ---------- real-time: auto-refresh engine ---------- */
+const REFRESH_MS=15*60*1000;   // re-check live sources every 15 minutes
+let lastChecked=null, nextAt=null, anyLive=false;
+function two(x){return String(x).padStart(2,"0");}
+function fmtClock(d){return two(d.getHours())+":"+two(d.getMinutes())+":"+two(d.getSeconds());}
+function stampChecked(){ lastChecked=new Date(); nextAt=new Date(Date.now()+REFRESH_MS); tickLive(); }
+function tickLive(){
+  const el=document.getElementById("liveTicker"); if(!el) return;
+  if(!lastChecked){ el.textContent="auto-refresh armed · first check running…"; return; }
+  const s=Math.max(0,Math.floor((+nextAt-Date.now())/1000));
+  el.textContent=(anyLive?"live":"offline · snapshot")+" · checked "+fmtClock(lastChecked)+" · next check "+two(Math.floor(s/60))+":"+two(s%60);
+}
+setInterval(tickLive,1000);
+setInterval(()=>ensureLive(true),REFRESH_MS);
+document.addEventListener("visibilitychange",()=>{
+  if(!document.hidden && nextAt && Date.now()>+nextAt) ensureLive(true);
+});
+
+/* ---------- toolkit: personal inflation, scenario, export ---------- */
+const MI_BUCKETS=[
+  {key:"Housing & shelter", w:36, cat:"Shelter", fb:3.4},
+  {key:"Food & groceries", w:13, cat:"Food", fb:2.7},
+  {key:"Energy, gas & utilities", w:7, cat:"Energy", fb:23.5},
+  {key:"Vehicles & transport", w:7, fb:0.0},
+  {key:"Medical care", w:8, cat:"Medical care", fb:3.2},
+  {key:"Apparel", w:3, cat:"Apparel", fb:1.1},
+  {key:"Everything else", w:26, cat:"Core (ex food/energy)", fb:2.9}
+];
+function miYoy(b){
+  if(b.cat){ const c=DATA.us.categories.find(x=>x.name===b.cat); if(c) return c.yoy; }
+  return b.fb;
+}
+function renderToolkit(){
+  const host=document.getElementById("miSliders");
+  host.innerHTML=MI_BUCKETS.map((b,i)=>`
+    <div class="col-srow">
+      <div class="col-srow-name">${b.key} <span style="font-family:var(--mono);font-size:10.5px;color:${heatYoy(miYoy(b))}">${fmtPct(miYoy(b))}</span></div>
+      <input type="range" min="0" max="55" step="1" value="${b.w}" data-mi="${i}" aria-label="${b.key} share of spending">
+      <div class="col-w" id="miW${i}"></div>
+      <div class="col-contrib" id="miC${i}"></div>
+    </div>`).join("");
+  host.querySelectorAll("input[data-mi]").forEach(inp=>inp.addEventListener("input",updMi));
+  updMi();
+  document.getElementById("scEnergy").addEventListener("input",updSc);
+  updSc();
+  document.getElementById("expTrend").onclick=()=>csvDl("us_cpi_trend.csv",
+    ["month","headline_yoy_pct","estimated"],
+    DATA.us.trend.map(d=>[d.m,d.v,d.est?"yes":"no"]));
+  document.getElementById("expCats").onclick=()=>csvDl("us_cpi_categories.csv",
+    ["category","yoy_pct","reported"],
+    DATA.us.categories.map(c=>[c.name,c.yoy,c.reported?"yes":"no"]));
+  document.getElementById("expCities").onclick=()=>csvDl("cities_cost_of_living.csv",
+    ["city","country","cost_index_nyc100","net_salary_usd_month","gni_ppp_usd_year"],
+    DATA.cities.map(c=>[c.city,c.country,c.idx,c.salary??"",c.gni??""]));
+  document.getElementById("expCtry").onclick=()=>csvDl("countries_inflation.csv",
+    ["country","inflation_pct","source"],
+    DATA.countries.map(c=>[c.country,c.v,c.live?"World Bank (live)":"IMF WEO Apr 2026"]));
+}
+function updMi(){
+  const inputs=[...document.querySelectorAll("input[data-mi]")];
+  const ws=inputs.map(i=>+i.value);
+  const total=ws.reduce((a,b)=>a+b,0)||1;
+  let rate=0, top={k:"",c:0};
+  MI_BUCKETS.forEach((b,i)=>{
+    const share=ws[i]/total, c=share*miYoy(b);
+    rate+=c;
+    document.getElementById("miW"+i).textContent=(share*100).toFixed(0)+"%";
+    document.getElementById("miC"+i).textContent=(c>=0?"+":"")+c.toFixed(2)+" pp";
+    if(Math.abs(c)>Math.abs(top.c)) top={k:b.key,c};
+  });
+  const off=DATA.us.headline, d=rate-off;
+  const verdict = Math.abs(d)<0.05 ? "right at the national average"
+    : `<b style="color:${d>0?rgb(EMBER):rgb(TEAL)}">${Math.abs(d).toFixed(1)} pp ${d>0?"hotter":"cooler"}</b> than the national average`;
+  document.getElementById("miResult").innerHTML=
+    `<span class="col-bigrate" style="color:${heatYoy(rate)}">${rate.toFixed(1)}%</span> your personal inflation — ${verdict} (<b>${off.toFixed(1)}%</b>). Biggest driver: <b>${top.k}</b> at ${(top.c>=0?"+":"")+top.c.toFixed(2)} pp.`;
+}
+function updSc(){
+  const v=+document.getElementById("scEnergy").value;
+  const now=miYoy(MI_BUCKETS[2]);           // current energy YoY
+  const W_E=0.07;                            // approx CPI energy weight
+  const proj=DATA.us.headline + W_E*(v-now);
+  document.getElementById("scResult").innerHTML=
+    `Energy at <b>${fmtPct(v)}</b> (now ${fmtPct(now)}) → headline CPI ≈ `+
+    `<span class="col-bigrate" style="color:${heatYoy(proj)}">${proj.toFixed(1)}%</span>`+
+    `<span style="font-size:13px;color:var(--ink-soft)"> first-order, all else fixed. Brent's ~20% June drop points left on this slider — the counterweight to the model's momentum.</span>`;
+}
+function csvDl(name,header,rows){
+  const esc=v=>{ v=String(v); return /[",\n]/.test(v) ? '"'+v.replace(/"/g,'""')+'"' : v; };
+  const txt=[header.join(",")].concat(rows.map(r=>r.map(esc).join(","))).join("\n");
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([txt],{type:"text/csv"}));
+  a.download=name; document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(a.href);
+}
+
 /* ---------- live data: World Bank Open Data API (free, no key) ---------- */
 const WB_INFLATION="FP.CPI.TOTL.ZG"; // inflation, consumer prices, annual %
 async function tryLiveWorldBank(){
@@ -872,12 +1282,15 @@ async function tryLiveGni(){
   }catch(e){ return false; }
 }
 let liveAttempted=false;
-async function ensureLive(){
-  if(liveAttempted) return;
+async function ensureLive(force){
+  if(liveAttempted && !force) return;
   liveAttempted=true;
   const [inflOk, gniOk]=await Promise.all([tryLiveWorldBank(), tryLiveGni()]);
   if(inflOk && rendered.countries) renderCountryBars();
   if(gniOk && rendered.pp) renderPurchasingPower();   // refresh GNI-based numbers if shown
+  if(meCode) loadCountry(meCode,true);                // refresh the personalized view too
+  anyLive=anyLive||inflOk||gniOk;
+  stampChecked();
 }
 
 function growBars(id){
@@ -893,17 +1306,19 @@ function growBars(id){
 }
 
 /* ---------- tabs ---------- */
-const tabs=[["tab-us","panel-us"],["tab-cities","panel-cities"],["tab-countries","panel-countries"],["tab-pp","panel-pp"]];
-const rendered={us:false,cities:false,countries:false,pp:false};
+const tabs=[["tab-us","panel-us"],["tab-me","panel-me"],["tab-cities","panel-cities"],["tab-countries","panel-countries"],["tab-pp","panel-pp"],["tab-tools","panel-tools"]];
+const rendered={us:false,me:false,cities:false,countries:false,pp:false,tools:false};
 function activate(tabId){
   tabs.forEach(([t,p])=>{
     const sel=t===tabId;
     document.getElementById(t).setAttribute("aria-selected",sel);
     document.getElementById(p).hidden=!sel;
   });
+  if(tabId==="tab-me" && !rendered.me){initMyLocation();rendered.me=true;}
   if(tabId==="tab-cities" && !rendered.cities){renderCityBars();rendered.cities=true;}
   if(tabId==="tab-countries"){ if(!rendered.countries){renderCountryBars();rendered.countries=true;} ensureLive(); }
   if(tabId==="tab-pp" && !rendered.pp){renderPurchasingPower();rendered.pp=true;}
+  if(tabId==="tab-tools" && !rendered.tools){renderToolkit();rendered.tools=true;}
 }
 tabs.forEach(([t])=>{
   const btn=document.getElementById(t);
@@ -925,6 +1340,8 @@ renderUsBars();
 renderUsMetros();
 rendered.us=true;
 ensureLive();   // attempt live World Bank data in the background; falls back to snapshot
+// arriving via a shared permalink (#c=FRA&city=Paris) → open My location directly
+try{ if(new URLSearchParams(location.hash.slice(1)).get("c")) activate("tab-me"); }catch(e){}
 </script>
 </body>
 </html>

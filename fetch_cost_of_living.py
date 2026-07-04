@@ -179,7 +179,9 @@ CURATED_COUNTRIES = [
     {"country": "Switzerland", "code": "CHE", "v": 0.6},
 ]
 NEXT_CPI = "July 14, 2026"
-# Near-term OUTLOOK scenario (not a forecast) reflecting the mid-June energy reversal.
+# Fallback outlook only: the dashboard now computes its own damped-trend
+# forecast from the trend series in-browser; these values are used only if
+# that computation can't run (series shorter than 6 points).
 OUTLOOK = [
     {"m": "Jun '26", "v": 4.0},
     {"m": "Jul '26", "v": 3.6},
