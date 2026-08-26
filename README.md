@@ -44,7 +44,7 @@ This repository contains my implementation work for Team J’s TKH × Bloomberg 
 python -m http.server 8000
 ```
 
-Open [http://localhost:8000/](http://localhost:8000/).
+Open `http://localhost:8000/`.
 
 ## Refresh the data
 
