@@ -2,18 +2,15 @@
 """
 fetch_cost_of_living.py
 -----------------------
-Pulls LIVE US cost-of-living data from the Federal Reserve (FRED) API and writes
-`data.js` next to the dashboard. The dashboard (cost-of-living-trend-analyzer.html)
+Pulls live US cost-of-living data from the public BLS API and writes
+`data.js` next to the dashboard. The dashboard (`index.html`)
 auto-detects `window.COL_DATA` and uses it instead of the built-in seed data.
 
 USAGE
-    1. Get a free FRED API key:  https://fredaccount.stlouisfed.org/apikeys
-    2. pip install requests
-    3. export FRED_API_KEY=your_key_here      (or paste it into FRED_API_KEY below)
-    4. python fetch_cost_of_living.py
-    5. Serve the folder so the browser can load data.js:
+    1. python fetch_cost_of_living.py
+    2. Serve the folder so the browser can load data.js:
            python -m http.server 8000
-       then open  http://localhost:8000/cost-of-living-trend-analyzer.html
+       then open  http://localhost:8000/
 
 WHY A LOCAL SERVER?  Browsers block reading local files via file:// for security.
 Serving over http:// lets the page load data.js. Without it, the dashboard still
@@ -25,55 +22,86 @@ World Bank Open Data API (https://api.worldbank.org/v2/country/all/indicator/FP.
 Hooks are stubbed at the bottom.
 """
 
-import os
 import json
 import datetime as dt
-
-try:
-    import requests
-except ImportError:
-    raise SystemExit("Missing dependency. Run:  pip install requests")
+from urllib.parse import urlencode
+from urllib.request import Request, urlopen
 
 # ---------------------------------------------------------------------------
-FRED_API_KEY = os.environ.get("FRED_API_KEY", "PASTE_YOUR_KEY_HERE")
-FRED_BASE = "https://api.stlouisfed.org/fred/series/observations"
+BLS_API = "https://api.bls.gov/publicAPI/v2/timeseries/data/"
 
 # FRED series IDs -> label shown in the dashboard.
-# units=pc1 asks FRED for the year-over-year percent change directly.
-HEADLINE_SERIES = "CPIAUCSL"          # CPI, All items
+# Use not-seasonally-adjusted CPI indexes so calculated 12-month changes match
+# the headline figures published in the BLS CPI release.
+HEADLINE_SERIES = "CUUR0000SA0"       # CPI-U, all items
 CATEGORY_SERIES = {
-    "Energy":                 "CPIENGSL",
-    "Shelter":                "CUSR0000SAH1",
-    "Medical care":           "CPIMEDSL",
-    "Core (ex food/energy)":  "CPILFESL",
-    "Food":                   "CPIUFDSL",
-    "Apparel":                "CPIAPPSL",
-    "Used cars & trucks":     "CUSR0000SETA02",
-    "New vehicles":           "CUSR0000SETA01",
+    "Energy":                 "CUUR0000SA0E",
+    "Shelter":                "CUUR0000SAH1",
+    "Medical care services":  "CUUR0000SAM2",
+    "Core (ex food/energy)":  "CUUR0000SA0L1E",
+    "Food":                   "CUUR0000SAF1",
+    "Apparel":                "CUUR0000SAA",
+    "Used cars & trucks":     "CUUR0000SETA02",
+    "New vehicles":           "CUUR0000SETA01",
 }
-REPORTED = {"Energy", "Shelter", "Core (ex food/energy)"}  # flag as headline-reported
+REPORTED = set(CATEGORY_SERIES)
 
 MONTHS_BACK = 18  # length of the trend line
 
 
-def fred_yoy(series_id, start):
-    """Return list of (YYYY-MM-DD, value%) year-over-year observations since `start`."""
-    params = {
-        "series_id": series_id,
-        "api_key": FRED_API_KEY,
-        "file_type": "json",
-        "units": "pc1",                 # percent change from a year ago
-        "observation_start": start,
-        "sort_order": "asc",
-    }
-    r = requests.get(FRED_BASE, params=params, timeout=30)
-    r.raise_for_status()
-    obs = r.json().get("observations", [])
-    out = []
-    for o in obs:
-        if o["value"] not in (".", "", None):
-            out.append((o["date"], round(float(o["value"]), 1)))
-    return out
+def fetch_text(url, params=None, timeout=30):
+    """Fetch UTF-8 text using only the Python standard library."""
+    if params:
+        url = f"{url}?{urlencode(params)}"
+    request = Request(url, headers={"User-Agent": "cost-of-living-trend-analyzer/1.0"})
+    with urlopen(request, timeout=timeout) as response:
+        return response.read().decode("utf-8")
+
+
+def fetch_json(url, timeout=30):
+    return json.loads(fetch_text(url, timeout=timeout))
+
+
+def bls_yoy(series_ids, start_year, end_year):
+    """Return monthly year-over-year changes for multiple BLS CPI series."""
+    payload = json.dumps({
+        "seriesid": series_ids,
+        "startyear": str(start_year),
+        "endyear": str(end_year),
+    }).encode("utf-8")
+    request = Request(
+        BLS_API,
+        data=payload,
+        headers={
+            "Content-Type": "application/json",
+            "User-Agent": "cost-of-living-trend-analyzer/1.0",
+        },
+    )
+    with urlopen(request, timeout=45) as response:
+        body = json.loads(response.read().decode("utf-8"))
+    if body.get("status") != "REQUEST_SUCCEEDED":
+        raise RuntimeError("; ".join(body.get("message") or ["BLS request failed"]))
+
+    output = {}
+    for series in body.get("Results", {}).get("series", []):
+        levels = {}
+        for row in series.get("data", []):
+            period = row.get("period", "")
+            if not period.startswith("M") or period == "M13":
+                continue
+            year, month = int(row["year"]), int(period[1:])
+            try:
+                levels[(year, month)] = float(row["value"])
+            except (TypeError, ValueError):
+                continue
+        changes = []
+        for (year, month), level in sorted(levels.items()):
+            prior = levels.get((year - 1, month))
+            if prior:
+                date_text = dt.date(year, month, 1).isoformat()
+                changes.append((date_text, round((level / prior - 1) * 100, 1)))
+        output[series["seriesID"]] = changes
+    return output
 
 
 def label_month(date_str):
@@ -81,19 +109,18 @@ def label_month(date_str):
     return d.strftime("%b '%y").replace("'0", "'")  # e.g. May '26
 
 
+def label_long_month(date_str):
+    return dt.date.fromisoformat(date_str).strftime("%B %Y")
+
+
 def build_payload():
-    if FRED_API_KEY in ("", "PASTE_YOUR_KEY_HERE"):
-        raise SystemExit(
-            "No FRED API key set.\n"
-            "Get one free at https://fredaccount.stlouisfed.org/apikeys "
-            "then `export FRED_API_KEY=...` and re-run."
-        )
-
-    start = (dt.date.today().replace(day=1) -
-             dt.timedelta(days=31 * (MONTHS_BACK + 2))).isoformat()
-
-    print(f"Fetching headline CPI ({HEADLINE_SERIES}) ...")
-    headline = fred_yoy(HEADLINE_SERIES, start)[-MONTHS_BACK:]
+    today = dt.date.today()
+    print("Fetching CPI series from the BLS public API ...")
+    all_series = [HEADLINE_SERIES, *CATEGORY_SERIES.values()]
+    live = bls_yoy(all_series, today.year - 3, today.year)
+    headline = live.get(HEADLINE_SERIES, [])[-MONTHS_BACK:]
+    if not headline:
+        raise SystemExit("FRED returned no usable headline CPI observations.")
     trend = [{"m": label_month(d), "v": v, "est": False} for d, v in headline]
 
     latest = headline[-1][1]
@@ -104,7 +131,7 @@ def build_payload():
     core_val = latest
     for name, sid in CATEGORY_SERIES.items():
         try:
-            series = fred_yoy(sid, start)
+            series = live.get(sid, [])
             val = series[-1][1] if series else None
             if val is None:
                 continue
@@ -133,8 +160,8 @@ def build_payload():
             "headline": latest,
             "headlinePrev": prev,
             "core": core_val,
-            "catMonth": label_month(headline[-1][0]),
-            "metaNote": f"FRED live · pulled {dt.date.today().isoformat()}",
+            "catMonth": label_long_month(headline[-1][0]),
+            "metaNote": f"BLS · {label_long_month(headline[-1][0])}",
             "trend": trend,
             "shockFromIndex": shock_idx,
             "categories": categories,
@@ -174,11 +201,11 @@ CURATED_COUNTRIES = [
     {"country": "Iran", "code": "IRN", "v": 50},
     {"country": "Argentina", "code": "ARG", "v": 33},
     {"country": "Turkey", "code": "TUR", "v": 31},
-    {"country": "United States", "code": "USA", "v": 4.2, "here": True},
+    {"country": "United States", "code": "USA", "v": 3.4, "here": True},
     {"country": "Euro area", "code": "EMU", "v": 3.2},
     {"country": "Switzerland", "code": "CHE", "v": 0.6},
 ]
-NEXT_CPI = "July 14, 2026"
+NEXT_CPI = "September 11, 2026"
 # Fallback outlook only: the dashboard now computes its own damped-trend
 # forecast from the trend series in-browser; these values are used only if
 # that computation can't run (series shorter than 6 points).
@@ -218,7 +245,7 @@ def merge_worldbank_inflation(countries):
     out = [dict(c) for c in countries]
     by_code = {c["code"]: c for c in out}
     try:
-        rows = requests.get(url, timeout=30).json()[1] or []
+        rows = fetch_json(url, timeout=30)[1] or []
         hits, years = 0, []
         for r in rows:
             if r.get("value") is None:
@@ -259,7 +286,7 @@ def fetch_gni_ppp(country_codes=("CHE", "USA", "SGP", "GBR", "FRA", "JPN")):
            f"NY.GNP.PCAP.PP.CD?format=json&per_page=400&mrnev=1")
     out = {}
     try:
-        for r in requests.get(url, timeout=20).json()[1] or []:
+        for r in fetch_json(url, timeout=20)[1] or []:
             if r.get("value") is not None:
                 code = r.get("countryiso3code") or (r.get("country") or {}).get("id")
                 out[code] = round(float(r["value"]))
@@ -290,7 +317,7 @@ def main():
         f.write(js)
     print("\n✓ Wrote data.js")
     print("  Now run:  python -m http.server 8000")
-    print("  Open:     http://localhost:8000/cost-of-living-trend-analyzer.html")
+    print("  Open:     http://localhost:8000/")
 
 
 if __name__ == "__main__":

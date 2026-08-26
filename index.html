@@ -223,7 +223,7 @@
 <section class="col-hero">
   <div class="col-wrap col-hero-grid">
     <div class="col-hero-lead">
-      <div class="col-kicker">↑ US headline inflation, year-over-year</div>
+      <div class="col-kicker">US headline inflation, year-over-year</div>
       <div class="col-bignum"><span id="heroNum">—</span><span class="col-delta" id="heroDelta"></span></div>
       <p class="col-hero-sub" id="heroSub"></p>
       <p class="col-hero-note" id="heroNote"></p>
@@ -255,7 +255,7 @@
     <div class="col-panel-head">
       <div>
         <h2 class="col-panel-h">United States — what's driving the squeeze</h2>
-        <p class="col-panel-desc">Inflation reversed upward through 2026 on an energy shock. The line shows the headline trend; the bars show where prices sit right now, year-over-year.</p>
+        <p class="col-panel-desc">The line shows the national headline trend; the bars show the latest year-over-year change by category.</p>
       </div>
       <div class="col-panel-meta" id="usMeta"></div>
     </div>
@@ -289,7 +289,7 @@
 
     <details class="col-notes">
       <summary>Data notes</summary>
-      <p>Headline, core, energy and shelter figures are the values reported by the U.S. Bureau of Labor Statistics (May 2026 CPI, released June 10 2026); New York's metro rate (5.1%) is also reported. Other category and metro values, and the pre-2026 trend, are approximate placeholders pending live data. The dashed line is a <b>damped-trend statistical forecast</b> fit in-browser to the plotted series (~80% band) — momentum only; it can't see news like the mid-June energy reversal. Use the Toolkit's energy scenario to weigh that against the model. Run <code>fetch_cost_of_living.py</code> to pull live FRED CPI; metros can be wired to BLS regional CPI series.</p>
+      <p>National headline and category values reflect the July 2026 U.S. Bureau of Labor Statistics release. When <code>data.js</code> is present, the national trend and categories are refreshed directly from the keyless BLS public API. Metro values are a curated, illustrative snapshot rather than a live official comparison. The dashed line is a <b>damped-trend statistical forecast</b> fit in-browser to the plotted series (~80% band); it is explanatory, not financial advice.</p>
     </details>
   </section>
 
@@ -458,7 +458,7 @@
         <span class="col-spark-cap">CPI energy weight ≈ 7%</span>
       </div>
       <div class="col-scenario">
-        <input type="range" id="scEnergy" min="-25" max="40" step="0.5" value="23.5" aria-label="Energy inflation scenario, percent year over year">
+        <input type="range" id="scEnergy" min="-25" max="40" step="0.5" value="14.7" aria-label="Energy inflation scenario, percent year over year">
         <div class="col-sc-scale"><span>-25%</span><span>0%</span><span>+40%</span></div>
         <div class="col-result" id="scResult"></div>
       </div>
@@ -486,8 +486,8 @@
 
 <footer class="col-wrap col-foot">
   <div class="col-foot-sources">
-    <b>Sources:</b> U.S. Bureau of Labor Statistics (CPI) · Federal Reserve (FRED) · World Bank Open Data (live country inflation) · IMF World Economic Outlook, April 2026 · Numbeo Cost of Living Index 2026.<br>
-    Built for the TKH × Bloomberg Hackathon. Seed data current to June 2026.
+    <b>Sources:</b> U.S. Bureau of Labor Statistics (CPI) · World Bank Open Data (live country inflation) · IMF World Economic Outlook, April 2026 · Numbeo Cost of Living Index 2026.<br>
+    Built for the TKH × Bloomberg Hackathon. Embedded US seed data current to July 2026.
   </div>
   <div class="col-refresh">
     Refresh with live data:<br><code>python fetch_cost_of_living.py</code><br>then reload this page.
@@ -498,13 +498,13 @@
      If the file is absent this 404s harmlessly and the dashboard uses seed data. -->
 <script src="data.js" onerror="void 0"></script>
 <script>
-/* ---------- seed data (real June 2026 figures; see Data notes) ---------- */
+/* ---------- seed data (BLS July 2026 figures; see Data notes) ---------- */
 const SEED = {
-  asOf: "June 24, 2026",
+  asOf: "August 26, 2026",
   us: {
-    headline: 4.2, headlinePrev: 3.8, core: 2.9,
-    catMonth: "May 2026",
-    metaNote: "BLS · May 2026 release",
+    headline: 3.4, headlinePrev: 3.5, core: 2.5,
+    catMonth: "July 2026",
+    metaNote: "BLS · July 2026 release",
     trend: [
       {m:"Jun '24", v:3.0, est:true},
       {m:"Aug '24", v:2.5, est:true},
@@ -520,22 +520,23 @@ const SEED = {
       {m:"Feb '26", v:2.8, est:true},
       {m:"Mar '26", v:3.3, est:false},
       {m:"Apr '26", v:3.8, est:false},
-      {m:"May '26", v:4.2, est:false}
+      {m:"May '26", v:4.2, est:false},
+      {m:"Jun '26", v:3.5, est:false},
+      {m:"Jul '26", v:3.4, est:false}
     ],
     shockFromIndex: 9, // index in trend where 2026 energy shock band begins (Dec '25)
     categories: [
-      {name:"Energy", yoy:23.5, reported:true},
-      {name:"Shelter", yoy:3.4, reported:true},
-      {name:"Medical care", yoy:3.2},
-      {name:"Core (ex food/energy)", yoy:2.9, reported:true},
-      {name:"Food", yoy:2.7},
-      {name:"Apparel", yoy:1.1},
-      {name:"Used cars & trucks", yoy:0.4},
-      {name:"New vehicles", yoy:-0.4},
-      {name:"Health insurance", yoy:-6.4}
+      {name:"Energy", yoy:14.7, reported:true},
+      {name:"Shelter", yoy:3.2, reported:true},
+      {name:"Medical care services", yoy:2.7, reported:true},
+      {name:"Core (ex food/energy)", yoy:2.5, reported:true},
+      {name:"Food", yoy:3.0, reported:true},
+      {name:"Apparel", yoy:3.9, reported:true},
+      {name:"Used cars & trucks", yoy:-1.9, reported:true},
+      {name:"New vehicles", yoy:0.5, reported:true}
     ],
-    nextCpi:"July 14, 2026",
-    metroNational:4.2,
+    nextCpi:"September 11, 2026",
+    metroNational:3.4,
     outlook:[
       {m:"Jun '26", v:4.0},
       {m:"Jul '26", v:3.6},
@@ -577,7 +578,7 @@ const SEED = {
     {country:"Iran", code:"IRN", v:50},
     {country:"Argentina", code:"ARG", v:33},
     {country:"Turkey", code:"TUR", v:31},
-    {country:"United States", code:"USA", v:4.2, here:true},
+    {country:"United States", code:"USA", v:3.4, here:true},
     {country:"Euro area", code:"EMU", v:3.2},
     {country:"Switzerland", code:"CHE", v:0.6}
   ],
@@ -627,7 +628,9 @@ function renderHero(){
   document.getElementById("heroNum").textContent = u.headline.toFixed(1)+"%";
   const up = u.headline>=u.headlinePrev;
   document.getElementById("heroDelta").innerHTML = (up?"▲":"▼")+" from "+u.headlinePrev.toFixed(1)+"%";
-  document.getElementById("heroSub").textContent = "Highest since April 2023 — an energy-driven reversal.";
+  document.getElementById("heroSub").textContent = up
+    ? "The 12-month rate increased from the prior reading."
+    : "The 12-month rate eased from the prior reading.";
   document.getElementById("heroNote").textContent = u.catMonth+" reading · core running calmer at "+u.core.toFixed(1)+"%";
 
   const energy = u.categories.find(c=>c.name==="Energy").yoy;
@@ -1159,13 +1162,13 @@ document.addEventListener("visibilitychange",()=>{
 
 /* ---------- toolkit: personal inflation, scenario, export ---------- */
 const MI_BUCKETS=[
-  {key:"Housing & shelter", w:36, cat:"Shelter", fb:3.4},
-  {key:"Food & groceries", w:13, cat:"Food", fb:2.7},
-  {key:"Energy, gas & utilities", w:7, cat:"Energy", fb:23.5},
+  {key:"Housing & shelter", w:36, cat:"Shelter", fb:3.2},
+  {key:"Food & groceries", w:13, cat:"Food", fb:3.0},
+  {key:"Energy, gas & utilities", w:7, cat:"Energy", fb:14.7},
   {key:"Vehicles & transport", w:7, fb:0.0},
-  {key:"Medical care", w:8, cat:"Medical care", fb:3.2},
-  {key:"Apparel", w:3, cat:"Apparel", fb:1.1},
-  {key:"Everything else", w:26, cat:"Core (ex food/energy)", fb:2.9}
+  {key:"Medical care", w:8, cat:"Medical care services", fb:2.7},
+  {key:"Apparel", w:3, cat:"Apparel", fb:3.9},
+  {key:"Everything else", w:26, cat:"Core (ex food/energy)", fb:2.5}
 ];
 function miYoy(b){
   if(b.cat){ const c=DATA.us.categories.find(x=>x.name===b.cat); if(c) return c.yoy; }
@@ -1182,6 +1185,7 @@ function renderToolkit(){
     </div>`).join("");
   host.querySelectorAll("input[data-mi]").forEach(inp=>inp.addEventListener("input",updMi));
   updMi();
+  document.getElementById("scEnergy").value=miYoy(MI_BUCKETS[2]);
   document.getElementById("scEnergy").addEventListener("input",updSc);
   updSc();
   document.getElementById("expTrend").onclick=()=>csvDl("us_cpi_trend.csv",
@@ -1223,7 +1227,7 @@ function updSc(){
   document.getElementById("scResult").innerHTML=
     `Energy at <b>${fmtPct(v)}</b> (now ${fmtPct(now)}) → headline CPI ≈ `+
     `<span class="col-bigrate" style="color:${heatYoy(proj)}">${proj.toFixed(1)}%</span>`+
-    `<span style="font-size:13px;color:var(--ink-soft)"> first-order, all else fixed. Brent's ~20% June drop points left on this slider — the counterweight to the model's momentum.</span>`;
+    `<span style="font-size:13px;color:var(--ink-soft)"> first-order, all else fixed; second-round effects are not modeled.</span>`;
 }
 function csvDl(name,header,rows){
   const esc=v=>{ v=String(v); return /[",\n]/.test(v) ? '"'+v.replace(/"/g,'""')+'"' : v; };

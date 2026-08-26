@@ -1,12 +1,6 @@
 # Auto-refresh the dashboard's live data on a schedule.
 #
-# SETUP (one time):
-#   1. Move this file to:  .github/workflows/refresh-data.yml
-#        mkdir -p .github/workflows && git mv refresh-data.yml .github/workflows/
-#   2. Add your FRED key as a repo secret:
-#        GitHub repo -> Settings -> Secrets and variables -> Actions
-#        -> New repository secret -> Name: FRED_API_KEY
-#   3. Commit & push. It runs daily and can be triggered manually
+# SETUP: commit this workflow. It runs daily and can be triggered manually
 #      (Actions tab -> "Refresh live data" -> Run workflow).
 #
 # WHAT IT DOES: runs fetch_cost_of_living.py (live FRED CPI + World Bank
@@ -37,12 +31,7 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install dependency
-        run: pip install requests
-
       - name: Fetch live data
-        env:
-          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
         run: python fetch_cost_of_living.py
 
       - name: Commit data.js if it changed
