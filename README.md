@@ -36,7 +36,7 @@ This repository contains my implementation work for Team J’s TKH × Bloomberg 
 - Python standard library
 - SVG-based data visualization
 - GitHub Actions and GitHub Pages
-- Keyless FRED CSV exports of BLS series and World Bank public APIs
+- Keyless BLS and World Bank public APIs
 
 ## Run locally
 
@@ -52,13 +52,13 @@ Open `http://localhost:8000/`.
 python fetch_cost_of_living.py
 ```
 
-The script uses keyless FRED CSV exports of BLS series plus the World Bank public API and generates `data.js`. Reload the dashboard to use the refreshed data.
+The script uses the keyless BLS and World Bank public APIs and generates `data.js`. Reload the dashboard to use the refreshed data.
 
 ## Data sources
 
 | Data | Source | Update frequency |
 |---|---|---|
-| U.S. CPI | [U.S. Bureau of Labor Statistics](https://www.bls.gov/cpi/) via [FRED](https://fred.stlouisfed.org/) | Monthly |
+| U.S. CPI | [U.S. Bureau of Labor Statistics](https://www.bls.gov/cpi/) | Monthly |
 | Country inflation | [World Bank: FP.CPI.TOTL.ZG](https://data.worldbank.org/indicator/FP.CPI.TOTL.ZG) | Annual |
 | GNI per capita, PPP | [World Bank: NY.GNP.PCAP.PP.CD](https://data.worldbank.org/indicator/NY.GNP.PCAP.PP.CD) | Annual |
 | Price-level ratio | [World Bank: PA.NUS.PPPC.RF](https://data.worldbank.org/indicator/PA.NUS.PPPC.RF) | Annual |

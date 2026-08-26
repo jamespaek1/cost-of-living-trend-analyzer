@@ -3,7 +3,7 @@
 # SETUP: commit this workflow. It runs daily and can be triggered manually
 #      (Actions tab -> "Refresh live data" -> Run workflow).
 #
-# WHAT IT DOES: runs fetch_cost_of_living.py (BLS CPI via keyless FRED CSV + World Bank
+# WHAT IT DOES: runs fetch_cost_of_living.py (live BLS CPI + World Bank
 # inflation & GNI), and commits the regenerated data.js only when it changed.
 # With GitHub Pages serving the repo, the public dashboard updates itself —
 # no human in the loop. US CPI publishes monthly (~8:30am ET on release days),

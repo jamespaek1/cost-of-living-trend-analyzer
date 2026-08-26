@@ -2,7 +2,7 @@
 """
 fetch_cost_of_living.py
 -----------------------
-Pulls live U.S. CPI data from keyless FRED CSV exports of BLS series and writes
+Pulls live U.S. CPI data from the keyless public BLS API and writes
 `data.js` next to the dashboard. The dashboard (`index.html`)
 auto-detects `window.COL_DATA` and uses it instead of the built-in seed data.
 
@@ -24,27 +24,25 @@ Hooks are stubbed at the bottom.
 
 import json
 import datetime as dt
-import csv
 import time
-from io import StringIO
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
 # ---------------------------------------------------------------------------
-FRED_CSV = "https://fred.stlouisfed.org/graph/fredgraph.csv"
+BLS_API = "https://api.bls.gov/publicAPI/v2/timeseries/data"
 
-# FRED series IDs sourced from BLS -> label shown in the dashboard.
+# BLS series IDs -> label shown in the dashboard.
 # Use not-seasonally-adjusted CPI indexes so calculated 12-month changes match
 # the headline figures published in the BLS CPI release.
-HEADLINE_SERIES = "CPIAUCNS"          # CPI-U, all items
+HEADLINE_SERIES = "CUUR0000SA0"       # CPI-U, all items
 CATEGORY_SERIES = {
-    "Energy":                 "CPIENGNS",
+    "Energy":                 "CUUR0000SA0E",
     "Shelter":                "CUUR0000SAH1",
     "Medical care services":  "CUUR0000SAM2",
-    "Core (ex food/energy)":  "CPILFENS",
-    "Food":                   "CPIUFDNS",
-    "Apparel":                "CPIAPPNS",
+    "Core (ex food/energy)":  "CUUR0000SA0L1E",
+    "Food":                   "CUUR0000SAF1",
+    "Apparel":                "CUUR0000SAA",
     "Used cars & trucks":     "CUUR0000SETA02",
     "New vehicles":           "CUUR0000SETA01",
 }
@@ -53,7 +51,7 @@ REPORTED = set(CATEGORY_SERIES)
 MONTHS_BACK = 18  # length of the trend line
 
 
-def request_bytes(request, timeout=30, attempts=5):
+def request_bytes(request, timeout=30, attempts=3):
     """Fetch a URL with bounded retries for transient public-API failures."""
     for attempt in range(1, attempts + 1):
         try:
@@ -81,42 +79,36 @@ def fetch_text(url, params=None, timeout=30):
     return request_bytes(request, timeout=timeout).decode("utf-8")
 
 
-def fetch_json(url, timeout=30):
-    return json.loads(fetch_text(url, timeout=timeout))
+def fetch_json(url, params=None, timeout=30):
+    return json.loads(fetch_text(url, params=params, timeout=timeout))
 
 
-def fred_yoy(series_ids, start_year, end_year):
-    """Return monthly year-over-year changes from keyless FRED CSV exports."""
-    text = fetch_text(
-        FRED_CSV,
-        params={
-            "id": ",".join(series_ids),
-            "cosd": f"{start_year}-01-01",
-            "coed": f"{end_year}-12-31",
-        },
-        timeout=45,
-    )
-    reader = csv.DictReader(StringIO(text))
-    if not reader.fieldnames or "observation_date" not in reader.fieldnames:
-        raise RuntimeError("FRED returned an invalid CSV response")
-
-    levels = {series_id: {} for series_id in series_ids}
-    for row in reader:
-        try:
-            observed = dt.date.fromisoformat(row["observation_date"])
-        except (TypeError, ValueError):
-            continue
-        for series_id in series_ids:
-            value = row.get(series_id)
-            if value in (None, "", "."):
-                continue
-            try:
-                levels[series_id][(observed.year, observed.month)] = float(value)
-            except ValueError:
-                continue
-
+def bls_yoy(series_ids, start_year, end_year):
+    """Return monthly year-over-year changes using keyless single-series requests."""
     output = {}
-    for series_id, observations in levels.items():
+    for series_id in series_ids:
+        body = fetch_json(
+            f"{BLS_API}/{series_id}",
+            params={"startyear": start_year, "endyear": end_year},
+            timeout=20,
+        )
+        if body.get("status") != "REQUEST_SUCCEEDED":
+            raise RuntimeError(
+                "; ".join(body.get("message") or [f"BLS request failed for {series_id}"])
+            )
+        observations = {}
+        series_rows = body.get("Results", {}).get("series", [])
+        if series_rows:
+            for row in series_rows[0].get("data", []):
+                period = row.get("period", "")
+                if not period.startswith("M") or period == "M13":
+                    continue
+                try:
+                    year = int(row["year"])
+                    month = int(period[1:])
+                    observations[(year, month)] = float(row["value"])
+                except (KeyError, TypeError, ValueError):
+                    continue
         changes = []
         for (year, month), level in sorted(observations.items()):
             prior = observations.get((year - 1, month))
@@ -138,9 +130,9 @@ def label_long_month(date_str):
 
 def build_payload():
     today = dt.date.today()
-    print("Fetching BLS CPI series from keyless FRED CSV exports ...")
+    print("Fetching CPI series from keyless BLS single-series requests ...")
     all_series = [HEADLINE_SERIES, *CATEGORY_SERIES.values()]
-    live = fred_yoy(all_series, today.year - 3, today.year)
+    live = bls_yoy(all_series, today.year - 3, today.year)
     headline = live.get(HEADLINE_SERIES, [])[-MONTHS_BACK:]
     if not headline:
         raise SystemExit("FRED returned no usable headline CPI observations.")
