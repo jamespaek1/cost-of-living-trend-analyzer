@@ -30,7 +30,7 @@ from urllib.request import Request, urlopen
 # ---------------------------------------------------------------------------
 BLS_API = "https://api.bls.gov/publicAPI/v2/timeseries/data/"
 
-# FRED series IDs -> label shown in the dashboard.
+# BLS series IDs -> label shown in the dashboard.
 # Use not-seasonally-adjusted CPI indexes so calculated 12-month changes match
 # the headline figures published in the BLS CPI release.
 HEADLINE_SERIES = "CUUR0000SA0"       # CPI-U, all items
