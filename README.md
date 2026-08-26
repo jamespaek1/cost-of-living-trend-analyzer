@@ -63,7 +63,7 @@ The script uses the keyless BLS and World Bank public APIs and generates `data.j
 | GNI per capita, PPP | [World Bank: NY.GNP.PCAP.PP.CD](https://data.worldbank.org/indicator/NY.GNP.PCAP.PP.CD) | Annual |
 | Price-level ratio | [World Bank: PA.NUS.PPPC.RF](https://data.worldbank.org/indicator/PA.NUS.PPPC.RF) | Annual |
 | City cost indices | [Numbeo Cost of Living Index](https://www.numbeo.com/cost-of-living/rankings.jsp) | Curated snapshot |
-| Forecast fallbacks | [IMF World Economic Outlook](https://www.imf.org/en/Publications/WEO/weo-database/) | Semiannual |
+| Forecast fallbacks | [IMF World Economic Outlook](https://www.imf.org/en/publications/weo) | Semiannual |
 
 ## Limitations
 
