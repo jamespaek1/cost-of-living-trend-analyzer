@@ -1,5 +1,5 @@
 window.COL_DATA = {
-  "asOf": "August 29, 2026",
+  "asOf": "August 30, 2026",
   "us": {
     "headline": 3.4,
     "headlinePrev": 3.5,
