@@ -1,17 +1,12 @@
 window.COL_DATA = {
-  "asOf": "September 10, 2026",
+  "asOf": "September 11, 2026",
   "us": {
     "headline": 3.4,
-    "headlinePrev": 3.5,
-    "core": 2.5,
-    "catMonth": "July 2026",
-    "metaNote": "BLS \u00b7 July 2026",
+    "headlinePrev": 3.4,
+    "core": 2.4,
+    "catMonth": "August 2026",
+    "metaNote": "BLS \u00b7 August 2026",
     "trend": [
-      {
-        "m": "Jan '25",
-        "v": 3.0,
-        "est": false
-      },
       {
         "m": "Feb '25",
         "v": 2.8,
@@ -96,48 +91,53 @@ window.COL_DATA = {
         "m": "Jul '26",
         "v": 3.4,
         "est": false
+      },
+      {
+        "m": "Aug '26",
+        "v": 3.4,
+        "est": false
       }
     ],
     "shockFromIndex": 12,
     "categories": [
       {
         "name": "Energy",
-        "yoy": 14.7,
+        "yoy": 16.3,
         "reported": true
       },
       {
         "name": "Shelter",
-        "yoy": 3.2,
-        "reported": true
-      },
-      {
-        "name": "Medical care services",
-        "yoy": 2.7,
-        "reported": true
-      },
-      {
-        "name": "Core (ex food/energy)",
-        "yoy": 2.5,
-        "reported": true
-      },
-      {
-        "name": "Food",
         "yoy": 3.0,
         "reported": true
       },
       {
+        "name": "Medical care services",
+        "yoy": 2.5,
+        "reported": true
+      },
+      {
+        "name": "Core (ex food/energy)",
+        "yoy": 2.4,
+        "reported": true
+      },
+      {
+        "name": "Food",
+        "yoy": 2.7,
+        "reported": true
+      },
+      {
         "name": "Apparel",
-        "yoy": 3.9,
+        "yoy": 3.6,
         "reported": true
       },
       {
         "name": "Used cars & trucks",
-        "yoy": -1.9,
+        "yoy": -2.3,
         "reported": true
       },
       {
         "name": "New vehicles",
-        "yoy": 0.5,
+        "yoy": 0.6,
         "reported": true
       }
     ],
