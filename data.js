@@ -1,5 +1,5 @@
 window.COL_DATA = {
-  "asOf": "September 20, 2026",
+  "asOf": "September 21, 2026",
   "us": {
     "headline": 3.4,
     "headlinePrev": 3.4,
@@ -212,7 +212,7 @@ window.COL_DATA = {
       "cc": "CHE",
       "idx": 122,
       "salary": 7800,
-      "gni": 90000
+      "gni": 101690
     },
     {
       "city": "Geneva",
@@ -220,7 +220,7 @@ window.COL_DATA = {
       "cc": "CHE",
       "idx": 120,
       "salary": 7300,
-      "gni": 90000
+      "gni": 101690
     },
     {
       "city": "New York",
@@ -228,7 +228,7 @@ window.COL_DATA = {
       "cc": "USA",
       "idx": 100,
       "salary": 6200,
-      "gni": 81000
+      "gni": 89490
     },
     {
       "city": "San Francisco",
@@ -236,7 +236,7 @@ window.COL_DATA = {
       "cc": "USA",
       "idx": 97.6,
       "salary": 7000,
-      "gni": 81000
+      "gni": 89490
     },
     {
       "city": "Singapore",
@@ -244,7 +244,7 @@ window.COL_DATA = {
       "cc": "SGP",
       "idx": 88,
       "salary": 4200,
-      "gni": 127000
+      "gni": 135750
     },
     {
       "city": "Hong Kong",
@@ -252,7 +252,7 @@ window.COL_DATA = {
       "cc": "HKG",
       "idx": 83,
       "salary": 3300,
-      "gni": 75000
+      "gni": 88500
     },
     {
       "city": "Boston",
@@ -260,7 +260,7 @@ window.COL_DATA = {
       "cc": "USA",
       "idx": 82.4,
       "salary": 5200,
-      "gni": 81000
+      "gni": 89490
     },
     {
       "city": "Sydney",
@@ -268,7 +268,7 @@ window.COL_DATA = {
       "cc": "AUS",
       "idx": 80.5,
       "salary": 4300,
-      "gni": 62000
+      "gni": 69930
     },
     {
       "city": "Miami",
@@ -276,7 +276,7 @@ window.COL_DATA = {
       "cc": "USA",
       "idx": 80.1,
       "salary": 4100,
-      "gni": 81000
+      "gni": 89490
     },
     {
       "city": "London",
@@ -284,7 +284,7 @@ window.COL_DATA = {
       "cc": "GBR",
       "idx": 78,
       "salary": 3900,
-      "gni": 58000
+      "gni": 64210
     },
     {
       "city": "Chicago",
@@ -292,7 +292,7 @@ window.COL_DATA = {
       "cc": "USA",
       "idx": 73.2,
       "salary": 4600,
-      "gni": 81000
+      "gni": 89490
     },
     {
       "city": "Dubai",
@@ -300,7 +300,7 @@ window.COL_DATA = {
       "cc": "ARE",
       "idx": 62,
       "salary": 3800,
-      "gni": 88000
+      "gni": 81640
     },
     {
       "city": "Paris",
@@ -308,7 +308,7 @@ window.COL_DATA = {
       "cc": "FRA",
       "idx": 58,
       "salary": 3100,
-      "gni": 60000
+      "gni": 65110
     },
     {
       "city": "Tokyo",
@@ -316,50 +316,58 @@ window.COL_DATA = {
       "cc": "JPN",
       "idx": 55,
       "salary": 2600,
-      "gni": 49000
+      "gni": 58920
     }
   ],
   "countries": [
     {
       "country": "Venezuela",
       "code": "VEN",
-      "v": 685
+      "v": 254.9,
+      "live": true
     },
     {
       "country": "South Sudan",
       "code": "SSD",
-      "v": 113
+      "v": 91.4,
+      "live": true
     },
     {
       "country": "Iran",
       "code": "IRN",
-      "v": 50
+      "v": 42.2,
+      "live": true
     },
     {
       "country": "Argentina",
       "code": "ARG",
-      "v": 33
+      "v": 219.9,
+      "live": true
     },
     {
       "country": "Turkey",
       "code": "TUR",
-      "v": 31
+      "v": 34.9,
+      "live": true
     },
     {
       "country": "United States",
       "code": "USA",
-      "v": 3.4,
-      "here": true
+      "v": 2.9,
+      "here": true,
+      "live": true
     },
     {
       "country": "Euro area",
       "code": "EMU",
-      "v": 3.2
+      "v": 2.5,
+      "live": true
     },
     {
       "country": "Switzerland",
       "code": "CHE",
-      "v": 0.6
+      "v": 0.2,
+      "live": true
     }
   ],
   "purchasingPower": [
