@@ -1,5 +1,5 @@
 window.COL_DATA = {
-  "asOf": "October 2, 2026",
+  "asOf": "October 3, 2026",
   "us": {
     "headline": 3.4,
     "headlinePrev": 3.4,
@@ -323,51 +323,43 @@ window.COL_DATA = {
     {
       "country": "Venezuela",
       "code": "VEN",
-      "v": 254.9,
-      "live": true
+      "v": 685
     },
     {
       "country": "South Sudan",
       "code": "SSD",
-      "v": 91.4,
-      "live": true
+      "v": 113
     },
     {
       "country": "Iran",
       "code": "IRN",
-      "v": 42.2,
-      "live": true
+      "v": 50
     },
     {
       "country": "Argentina",
       "code": "ARG",
-      "v": 219.9,
-      "live": true
+      "v": 33
     },
     {
       "country": "Turkey",
       "code": "TUR",
-      "v": 34.9,
-      "live": true
+      "v": 31
     },
     {
       "country": "United States",
       "code": "USA",
-      "v": 2.9,
-      "here": true,
-      "live": true
+      "v": 3.4,
+      "here": true
     },
     {
       "country": "Euro area",
       "code": "EMU",
-      "v": 2.5,
-      "live": true
+      "v": 3.2
     },
     {
       "country": "Switzerland",
       "code": "CHE",
-      "v": 0.2,
-      "live": true
+      "v": 0.6
     }
   ],
   "purchasingPower": [
