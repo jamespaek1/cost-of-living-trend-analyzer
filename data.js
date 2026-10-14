@@ -1,17 +1,12 @@
 window.COL_DATA = {
-  "asOf": "October 13, 2026",
+  "asOf": "October 14, 2026",
   "us": {
-    "headline": 3.4,
+    "headline": 3.7,
     "headlinePrev": 3.4,
-    "core": 2.4,
-    "catMonth": "August 2026",
-    "metaNote": "BLS \u00b7 August 2026",
+    "core": 2.6,
+    "catMonth": "September 2026",
+    "metaNote": "BLS \u00b7 September 2026",
     "trend": [
-      {
-        "m": "Feb '25",
-        "v": 2.8,
-        "est": false
-      },
       {
         "m": "Mar '25",
         "v": 2.4,
@@ -96,18 +91,23 @@ window.COL_DATA = {
         "m": "Aug '26",
         "v": 3.4,
         "est": false
+      },
+      {
+        "m": "Sep '26",
+        "v": 3.7,
+        "est": false
       }
     ],
     "shockFromIndex": 12,
     "categories": [
       {
         "name": "Energy",
-        "yoy": 16.3,
+        "yoy": 20.4,
         "reported": true
       },
       {
         "name": "Shelter",
-        "yoy": 3.0,
+        "yoy": 3.2,
         "reported": true
       },
       {
@@ -117,22 +117,22 @@ window.COL_DATA = {
       },
       {
         "name": "Core (ex food/energy)",
-        "yoy": 2.4,
+        "yoy": 2.6,
         "reported": true
       },
       {
         "name": "Food",
-        "yoy": 2.7,
+        "yoy": 2.5,
         "reported": true
       },
       {
         "name": "Apparel",
-        "yoy": 3.6,
+        "yoy": 3.4,
         "reported": true
       },
       {
         "name": "Used cars & trucks",
-        "yoy": -2.3,
+        "yoy": -1.5,
         "reported": true
       },
       {
@@ -142,7 +142,7 @@ window.COL_DATA = {
       }
     ],
     "nextCpi": "September 11, 2026",
-    "metroNational": 3.4,
+    "metroNational": 3.7,
     "outlook": [
       {
         "m": "Jun '26",
