@@ -1,5 +1,5 @@
 window.COL_DATA = {
-  "asOf": "November 9, 2026",
+  "asOf": "November 10, 2026",
   "us": {
     "headline": 3.7,
     "headlinePrev": 3.4,
@@ -132,12 +132,12 @@ window.COL_DATA = {
       },
       {
         "name": "Used cars & trucks",
-        "yoy": -1.5,
+        "yoy": -3.3,
         "reported": true
       },
       {
         "name": "New vehicles",
-        "yoy": 0.6,
+        "yoy": 0.7,
         "reported": true
       }
     ],
